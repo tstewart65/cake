@@ -1,8 +1,10 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
+using Cake.Core.Polyfill;
 
 namespace Cake.Core.IO
 {
@@ -17,7 +19,12 @@ namespace Cake.Core.IO
         /// The default path comparer.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
-        public static readonly PathComparer Default = new PathComparer(Machine.IsUnix());
+        public static readonly PathComparer Default;
+
+        static PathComparer()
+        {
+            Default = new PathComparer(EnvironmentHelper.IsUnix());
+        }
 
         /// <summary>
         /// Gets a value indicating whether comparison is case sensitive.

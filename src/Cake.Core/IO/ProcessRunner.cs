@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using Cake.Core.Diagnostics;
+using Cake.Core.Polyfill;
 
 namespace Cake.Core.IO
 {
@@ -79,13 +80,13 @@ namespace Cake.Core.IO
             };
 
             // Add environment variables
-            info.EnvironmentVariables["CAKE"] = "True";
-            info.EnvironmentVariables["CAKE_VERSION"] = _environment.Runtime.CakeVersion.ToString(3);
+            ProcessHelper.SetEnvironmentVariable(info, "CAKE", "True");
+            ProcessHelper.SetEnvironmentVariable(info, "CAKE_VERSION", _environment.Runtime.CakeVersion.ToString(3));
             if (settings.EnvironmentVariables != null)
             {
                 foreach (var environmentVariable in settings.EnvironmentVariables)
                 {
-                    info.EnvironmentVariables[environmentVariable.Key] = environmentVariable.Value;
+                    ProcessHelper.SetEnvironmentVariable(info, environmentVariable.Key, environmentVariable.Value);
                 }
             }
 

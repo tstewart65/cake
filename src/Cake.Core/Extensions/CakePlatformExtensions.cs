@@ -2,8 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using Cake.Core.IO;
+using System;
+using Cake.Core.Polyfill;
 
 // ReSharper disable once CheckNamespace
 namespace Cake.Core
@@ -24,7 +25,7 @@ namespace Cake.Core
             {
                 throw new ArgumentNullException("platform");
             }
-            return Machine.IsUnix(platform.Family);
+            return EnvironmentHelper.IsUnix(platform.Family);
         }
     }
 }

@@ -17,7 +17,15 @@ namespace Cake.Testing
         /// <summary>
         /// Gets the version of Cake executing the script.
         /// </summary>
-        public Version CakeVersion { get; private set; }
+        public Version CakeVersion { get; set; }
+
+        /// <summary>
+        /// Gets a value indicating whether we're running on CoreClr.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if we're runnning on CoreClr; otherwise, <c>false</c>.
+        /// </value>
+        public bool IsCoreClr { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FakeRuntime"/> class.
@@ -25,7 +33,8 @@ namespace Cake.Testing
         public FakeRuntime()
         {
             TargetFramework = new FrameworkName(".NETFramework,Version=v4.5");
-            CakeVersion = typeof(ICakeRuntime).Assembly.GetName().Version;
+            CakeVersion = new Version(0, 1, 2);
+            IsCoreClr = false;
         }
     }
 }

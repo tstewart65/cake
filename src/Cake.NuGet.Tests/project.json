@@ -1,0 +1,38 @@
+{
+  "runtimes": {
+    "win7-x64": {}
+  },
+  "dependencies": {
+    "dotnet-test-xunit": "2.2.0-preview2-build1029",
+    "Cake.Core": { "target": "project" },
+    "Cake.NuGet": { "target": "project" },
+    "Cake.Testing": { "target": "project" },
+    "Cake.Testing.Xunit": { "target": "project" }
+
+  },
+
+  "frameworks": {
+    "netcoreapp1.0": {
+      "buildOptions": {
+        "define": [ "NETCORE" ]
+      },
+      "imports": [
+        "dnxcore50"
+      ],
+      "dependencies": {
+        "NETStandard.Library": "1.6.0",
+        "NuGet.Client": "3.5.0-beta2-1484"
+      }
+    },
+    "net462": {
+      "dependencies": {
+        "NSubstitute": "1.10.0.0"
+      },
+      "frameworkAssemblies": {
+        "System.Runtime": { "type": "build" }
+      }
+    }
+  },
+
+  "testRunner": "xunit"
+}

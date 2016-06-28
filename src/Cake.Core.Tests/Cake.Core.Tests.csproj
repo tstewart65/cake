@@ -170,10 +170,6 @@
     <EmbeddedResource Include="Unit\Scripting\CodeGen\Expected\Methods\NonGeneric_ExtensionMethodWithArrayParameter" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Cake.Core\Cake.Core.csproj">
-      <Project>{8074B833-11B8-459F-BB98-BFBA2BC5C698}</Project>
-      <Name>Cake.Core</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Cake.Testing.Xunit\Cake.Testing.Xunit.csproj">
       <Project>{5AF751D1-BB54-4268-9E42-3A898B034B06}</Project>
       <Name>Cake.Testing.Xunit</Name>

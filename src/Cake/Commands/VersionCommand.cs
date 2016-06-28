@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 using System.Diagnostics;
 using Cake.Core;
+using System.Reflection;
 
 namespace Cake.Commands
 {
@@ -51,6 +52,9 @@ namespace Cake.Commands
             _console.WriteLine(@"\____/\__,_|_|\_\___\_____/\__,_|_|_|\__,_|");
             _console.WriteLine();
             _console.WriteLine(@"                             Version {0}", GetVersion());
+#if NETCORE
+            _console.WriteLine(@"                       Running on .NET Core", GetVersion());
+#endif
             _console.WriteLine();
 
             return true;
@@ -58,7 +62,7 @@ namespace Cake.Commands
 
         private static string GetVersion()
         {
-            var assembly = typeof(CakeApplication).Assembly;
+            var assembly = typeof(CakeApplication).GetTypeInfo().Assembly;
             return FileVersionInfo.GetVersionInfo(assembly.Location).ProductVersion;
         }
     }

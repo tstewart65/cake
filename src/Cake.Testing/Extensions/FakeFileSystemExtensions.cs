@@ -56,7 +56,7 @@ namespace Cake.Testing
             var file = fileSystem.GetFile(path);
             if (!file.Exists)
             {
-                file.OpenWrite().Close();
+                file.OpenWrite().Dispose();
             }
             return file;
         }

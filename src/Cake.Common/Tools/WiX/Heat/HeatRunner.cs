@@ -231,7 +231,7 @@ namespace Cake.Common.Tools.WiX.Heat
             // Suppress specific warnings
             if (settings.SuppressSpecificWarnings != null && settings.SuppressSpecificWarnings.Any())
             {
-                var warnings = settings.SuppressSpecificWarnings.Select(warning => string.Format(CultureInfo.InstalledUICulture, "-sw{0}", warning));
+                var warnings = settings.SuppressSpecificWarnings.Select(warning => string.Format(CultureInfo.InvariantCulture, "-sw{0}", warning));
                 foreach (var warning in warnings)
                 {
                     builder.Append(warning);

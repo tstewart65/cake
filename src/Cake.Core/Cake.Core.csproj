@@ -181,6 +181,9 @@
     <Compile Include="Packaging\IPackageInstaller.cs" />
     <Compile Include="Packaging\PackageReference.cs" />
     <Compile Include="Packaging\PackageType.cs" />
+    <Compile Include="Polyfill\EnvironmentHelper.cs" />
+    <Compile Include="Polyfill\AssemblyLoader.cs" />
+    <Compile Include="Polyfill\AssemblyHelper.cs" />
     <Compile Include="Properties\Namespaces.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>

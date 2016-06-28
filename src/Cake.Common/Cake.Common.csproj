@@ -145,6 +145,8 @@
     <Compile Include="IO\DirectoryCreator.cs" />
     <Compile Include="IO\FileDeleter.cs" />
     <Compile Include="IO\FileMover.cs" />
+    <Compile Include="Polyfill/XmlTransformationHelper.cs" />
+    <Compile Include="Polyfill/XmlWriterSettingsHelper.cs" />
     <Compile Include="ProcessAliases.cs" />
     <Compile Include="ReleaseNotes.cs" />
     <Compile Include="ReleaseNotesAliases.cs" />

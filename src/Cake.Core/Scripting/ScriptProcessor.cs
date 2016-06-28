@@ -156,9 +156,11 @@ namespace Cake.Core.Scripting
                     var result = installer.Install(tool, PackageType.Tool, installPath);
                     if (result.Count == 0)
                     {
+#if !NETCORE
                         const string format = "Failed to install tool '{0}'.";
                         var message = string.Format(CultureInfo.InvariantCulture, format, tool.Package);
                         throw new CakeException(message);
+#endif
                     }
 
                     // Register the tools.

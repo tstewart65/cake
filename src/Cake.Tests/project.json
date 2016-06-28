@@ -1,0 +1,33 @@
+{
+  "dependencies": {
+    "dotnet-test-xunit": "2.2.0-preview2-build1029",
+    "Cake": { "target": "project" },
+    "Cake.Core": { "target": "project" },
+    "Cake.Testing": { "target": "project" },
+    "Cake.Testing.Xunit": { "target": "project" },
+    "NSubstitute": "1.10.0.0"
+  },
+
+  "buildOptions": {
+    "embed": [
+      "Data/MonoScriptProcessor/ArrayInitializer/*",
+      "Data/MonoScriptProcessor/Blocks/*",
+      "Data/MonoScriptProcessor/Complex/*",
+      "Data/MonoScriptProcessor/Mixed/*",
+      "Data/MonoScriptProcessor/MixedComments/*",
+      "Data/MonoScriptProcessor/Simple/*"
+    ]
+  },
+
+  "frameworks": {
+    "net462": {
+      "dependencies": {
+      },
+      "frameworkAssemblies": {
+        "System.Runtime": { "type": "build" }
+      }
+    }
+  },
+
+  "testRunner": "xunit"
+}

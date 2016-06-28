@@ -5,9 +5,13 @@ using System;
 using System.IO;
 using System.Text;
 using System.Xml;
-using System.Xml.Xsl;
 using Cake.Core;
 using Cake.Core.IO;
+using Cake.Common.Polyfill;
+
+#if !NETCORE
+using System.Xml.Xsl;
+#endif
 
 namespace Cake.Common.Xml
 {
@@ -211,9 +215,7 @@ namespace Cake.Common.Xml
                 throw new ArgumentNullException("result", "Null result supplied.");
             }
 
-            var xslTransform = new XslCompiledTransform();
-            xslTransform.Load(xsl);
-            xslTransform.Transform(xml, result);
+            XmlTransformationHelper.Transform(xsl, xml, result);
         }
     }
 }

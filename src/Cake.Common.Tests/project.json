@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "dotnet-test-xunit": "2.2.0-preview2-build1029",
+    "Cake.Core": { "target": "project" },
+    "Cake.Common": { "target": "project" },
+    "Cake.Testing": { "target": "project" },
+    "Cake.Testing.Xunit": { "target": "project" },
+    "NSubstitute": "1.10.0.0"
+  },
+
+  "frameworks": {
+    "net462": {
+    }
+  },
+
+  "testRunner": "xunit"
+}

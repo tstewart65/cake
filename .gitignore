@@ -8,6 +8,12 @@
 /[Aa]rtifacts/
 *.sln.ide/
 
+# Visual Studio
+.vs/
+.vscode/
+launchSettings.json
+project.lock.json
+
 # Build related
 build-results/
 tools/Cake/

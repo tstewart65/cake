@@ -1,6 +1,7 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
 using System;
 using Cake.Core.Composition;
 using Cake.Core.Packaging;
@@ -24,16 +25,16 @@ namespace Cake.NuGet
                 throw new ArgumentNullException("registry");
             }
 
-            // NuGet addins support
-            registry.RegisterType<NuGetVersionUtilityAdapter>().As<INuGetFrameworkCompatibilityFilter>().As<IFrameworkNameParser>().Singleton();
-            registry.RegisterType<NuGetPackageAssembliesLocator>().As<INuGetPackageAssembliesLocator>().Singleton();
-            registry.RegisterType<NuGetPackageReferenceBundler>().As<INuGetPackageReferenceBundler>().Singleton();
-            registry.RegisterType<NuGetAssemblyCompatibilityFilter>().As<INuGetAssemblyCompatibilityFilter>().Singleton();
-            registry.RegisterType<AssemblyFrameworkNameParser>().As<IAssemblyFrameworkNameParser>().Singleton();
+#if NETCORE
+            // NuGet V3
+            registry.RegisterType<V3.NuGetV3ContentResolver>().As<INuGetContentResolver>().Singleton();
+#else
+            // NuGet V2
+            registry.RegisterType<V2.NuGetV2ContentResolver>().As<INuGetContentResolver>().Singleton();
+#endif
 
             // URI resource support.
             registry.RegisterType<NuGetPackageInstaller>().As<IPackageInstaller>().Singleton();
-            registry.RegisterType<NuGetPackageContentResolver>().As<INuGetPackageContentResolver>().Singleton();
         }
     }
 }

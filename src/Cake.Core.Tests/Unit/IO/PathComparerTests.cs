@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 using Cake.Core.IO;
+using Cake.Core.Polyfill;
 using Xunit;
 
 namespace Cake.Core.Tests.Unit.IO
@@ -163,7 +164,7 @@ namespace Cake.Core.Tests.Unit.IO
             public void Should_Return_Correct_Comparer_Depending_On_Operative_System()
             {
                 // Given
-                var expected = Machine.IsUnix();
+                var expected = EnvironmentHelper.IsUnix();
 
                 // When
                 var instance = PathComparer.Default;
