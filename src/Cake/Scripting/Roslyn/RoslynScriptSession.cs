@@ -7,13 +7,17 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using Cake.Core;
+using Cake.Core.Configuration;
 using Cake.Core.Diagnostics;
 using Cake.Core.IO;
 using Cake.Core.Reflection;
 using Cake.Core.Scripting;
+using Cake.Core.Utilities;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
+using IO = System.IO;
 
 namespace Cake.Scripting.Roslyn
 {
@@ -24,13 +28,17 @@ namespace Cake.Scripting.Roslyn
         private readonly ICakeLog _log;
         private readonly CakeOptions _options;
 
+        private readonly bool _scriptCacheEnabled;
+        private readonly bool _scriptForceRecompile;
+        private readonly DirectoryPath _scriptCachePath;
+
         public HashSet<FilePath> ReferencePaths { get; }
 
         public HashSet<Assembly> References { get; }
 
         public HashSet<string> Namespaces { get; }
 
-        public RoslynScriptSession(IScriptHost host, IAssemblyLoader loader, ICakeLog log, CakeOptions options)
+        public RoslynScriptSession(IScriptHost host, IAssemblyLoader loader, ICakeLog log, CakeOptions options, ICakeConfiguration configuration)
         {
             _host = host;
             _loader = loader;
@@ -40,6 +48,11 @@ namespace Cake.Scripting.Roslyn
             ReferencePaths = new HashSet<FilePath>(PathComparer.Default);
             References = new HashSet<Assembly>();
             Namespaces = new HashSet<string>(StringComparer.Ordinal);
+
+            var cacheEnabled = configuration.GetValue(Constants.Cache.Enabled) ?? "false";
+            _scriptCacheEnabled = cacheEnabled.Equals("true", StringComparison.OrdinalIgnoreCase);
+            _scriptCachePath = configuration.GetScriptCachePath(options.Script.GetDirectory(), host.Context.Environment);
+            _scriptForceRecompile = options.ForceCacheRecompile;
         }
 
         public void AddReference(Assembly assembly)
@@ -78,62 +91,132 @@ namespace Cake.Scripting.Roslyn
 
         public void Execute(Script script)
         {
-            // Generate the script code.
-            var generator = new RoslynCodeGenerator();
-            var code = generator.Generate(script);
-
-            // Warn about any code generation excluded namespaces
-            foreach (var @namespace in script.ExcludedNamespaces)
+            var scriptName = _options.Script.GetFilename();
+            using (var sw = new DisposableStopwatch(_log, string.Format("{0} execution time", scriptName)))
             {
-                _log.Warning("Namespace {0} excluded by code generation, affected methods:\r\n\t{1}",
-                    @namespace.Key, string.Join("\r\n\t", @namespace.Value));
-            }
-
-            // Create the script options dynamically.
-            var options = Microsoft.CodeAnalysis.Scripting.ScriptOptions.Default
-                .AddImports(Namespaces.Except(script.ExcludedNamespaces.Keys))
-                .AddReferences(References)
-                .AddReferences(ReferencePaths.Select(r => r.FullPath))
-                .WithEmitDebugInformation(_options.PerformDebug)
-                .WithMetadataResolver(Microsoft.CodeAnalysis.Scripting.ScriptMetadataResolver.Default);
-
-            var roslynScript = CSharpScript.Create(code, options, _host.GetType());
-
-            _log.Verbose("Compiling build script...");
-            var compilation = roslynScript.GetCompilation();
-            var diagnostics = compilation.GetDiagnostics();
-
-            var errors = new List<Diagnostic>();
-
-            foreach (var diagnostic in diagnostics)
-            {
-                switch (diagnostic.Severity)
+                var cacheDLLFileName = $"{scriptName}.dll";
+                var cacheHashFileName = $"{scriptName}.hash";
+                var cachedAssembly = _scriptCachePath.CombineWithFilePath(cacheDLLFileName);
+                var hashFile = _scriptCachePath.CombineWithFilePath(cacheHashFileName);
+                string scriptHash = default;
+                if (_scriptCacheEnabled && IO.File.Exists(cachedAssembly.FullPath) && !_scriptForceRecompile)
                 {
-                    case DiagnosticSeverity.Info:
-                        _log.Information(diagnostic.ToString());
-                        break;
-                    case DiagnosticSeverity.Warning:
-                        _log.Warning(diagnostic.ToString());
-                        break;
-                    case DiagnosticSeverity.Error:
-                        _log.Error(diagnostic.ToString());
-                        errors.Add(diagnostic);
-                        break;
-                    default:
-                        break;
+                    _log.Verbose(cacheDLLFileName);
+                    scriptHash = FastHash.GenerateHash(Encoding.UTF8.GetBytes(string.Concat(script.Lines)));
+                    var cachedHash = IO.File.Exists(hashFile.FullPath) ? IO.File.ReadAllText(hashFile.FullPath) : string.Empty;
+                    if (scriptHash.Equals(cachedHash, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        _log.Verbose("Running cached build script...");
+                        RunScriptAssembly(cachedAssembly.FullPath);
+                        return;
+                    }
+                    else
+                    {
+                        _log.Verbose("Cache check failed.");
+                    }
+                }
+                Compilation compilation;
+                Microsoft.CodeAnalysis.Scripting.Script<object> roslynScript;
+                using (var sw1 = new DisposableStopwatch(_log, "Script compile time"))
+                {
+                    // Generate the script code.
+                    var generator = new RoslynCodeGenerator();
+                    var code = generator.Generate(script);
+
+                    // Warn about any code generation excluded namespaces
+                    foreach (var @namespace in script.ExcludedNamespaces)
+                    {
+                        _log.Warning("Namespace {0} excluded by code generation, affected methods:\r\n\t{1}",
+                            @namespace.Key, string.Join("\r\n\t", @namespace.Value));
+                    }
+
+                    // Create the script options dynamically.
+                    var options = Microsoft.CodeAnalysis.Scripting.ScriptOptions.Default
+                        .AddImports(Namespaces.Except(script.ExcludedNamespaces.Keys))
+                        .AddReferences(References)
+                        .AddReferences(ReferencePaths.Select(r => r.FullPath))
+                        .WithEmitDebugInformation(_options.PerformDebug)
+                        .WithMetadataResolver(Microsoft.CodeAnalysis.Scripting.ScriptMetadataResolver.Default);
+
+                    roslynScript = CSharpScript.Create(code, options, _host.GetType());
+
+                    _log.Verbose("Compiling build script...");
+                    compilation = roslynScript.GetCompilation();
+                    var diagnostics = compilation.GetDiagnostics();
+
+                    var errors = new List<Diagnostic>();
+
+                    foreach (var diagnostic in diagnostics)
+                    {
+                        switch (diagnostic.Severity)
+                        {
+                            case DiagnosticSeverity.Info:
+                                _log.Information(diagnostic.ToString());
+                                break;
+                            case DiagnosticSeverity.Warning:
+                                _log.Warning(diagnostic.ToString());
+                                break;
+                            case DiagnosticSeverity.Error:
+                                _log.Error(diagnostic.ToString());
+                                errors.Add(diagnostic);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+
+                    if (errors.Any())
+                    {
+                        var errorMessages = string.Join(Environment.NewLine, errors.Select(x => x.ToString()));
+                        var message = string.Format(CultureInfo.InvariantCulture, "Error(s) occurred when compiling build script:{0}{1}", Environment.NewLine, errorMessages);
+                        throw new CakeException(message);
+                    }
+                }
+                if (_scriptCacheEnabled)
+                {
+                    // Verify cache directory exists
+                    if (!IO.Directory.Exists(_scriptCachePath.FullPath))
+                    {
+                        IO.Directory.CreateDirectory(_scriptCachePath.FullPath);
+                    }
+                    if (string.IsNullOrEmpty(scriptHash))
+                    {
+                        scriptHash = FastHash.GenerateHash(Encoding.UTF8.GetBytes(string.Concat(script.Lines)));
+                    }
+                    var emitResult = compilation.Emit(cachedAssembly.FullPath);
+
+                    if (emitResult.Success)
+                    {
+                        IO.File.WriteAllText(hashFile.FullPath, scriptHash);
+                        RunScriptAssembly(cachedAssembly.FullPath);
+                    }
+                }
+                else
+                {
+                    using (new ScriptAssemblyResolver(_log))
+                    {
+                        roslynScript.RunAsync(_host).Wait();
+                    }
                 }
             }
+        }
 
-            if (errors.Any())
-            {
-                var errorMessages = string.Join(Environment.NewLine, errors.Select(x => x.ToString()));
-                var message = string.Format(CultureInfo.InvariantCulture, "Error(s) occurred when compiling build script:{0}{1}", Environment.NewLine, errorMessages);
-                throw new CakeException(message);
-            }
-
+        private void RunScriptAssembly(string assemblyPath)
+        {
+            var assembly = Assembly.LoadFile(assemblyPath);
+            var type = assembly.GetType("Submission#0");
+            var factoryMethod = type.GetMethod("<Factory>", new[] { typeof(object[]) });
             using (new ScriptAssemblyResolver(_log))
             {
-                roslynScript.RunAsync(_host).Wait();
+                try
+                {
+                    var task = (System.Threading.Tasks.Task<object>)factoryMethod.Invoke(null, new object[] { new object[] { _host, null } });
+                    task.Wait();
+                }
+                catch (TargetInvocationException ex)
+                {
+                    throw ex.InnerException;
+                }
             }
         }
     }
