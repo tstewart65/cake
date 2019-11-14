@@ -96,7 +96,7 @@ namespace Cake.Scripting.Roslyn
             {
                 var cacheDLLFileName = $"{scriptName}.dll";
                 var cacheHashFileName = $"{scriptName}.hash";
-                var cachedAssembly = _scriptCachePath.CombineWithFilePath(cacheDLLFileName);
+                var cachedAssembly = _scriptCachePath.CombineWithFilePath(cacheDLLFileName).MakeAbsolute(_host.Context.Environment);
                 var hashFile = _scriptCachePath.CombineWithFilePath(cacheHashFileName);
                 string scriptHash = default;
                 if (_scriptCacheEnabled && IO.File.Exists(cachedAssembly.FullPath) && !_scriptForceRecompile)
