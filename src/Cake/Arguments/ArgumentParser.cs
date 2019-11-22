@@ -187,9 +187,9 @@ namespace Cake.Arguments
                 options.Exclusive = ParseBooleanValue(value);
             }
 
-            if (name.Equals("recompile", StringComparison.OrdinalIgnoreCase))
+            if (name.Equals("regeneratecache", StringComparison.OrdinalIgnoreCase))
             {
-                options.ForceCacheRecompile = ParseBooleanValue(value);
+                options.RegenerateCache = ParseBooleanValue(value);
             }
 
             if (options.Arguments.ContainsKey(name))

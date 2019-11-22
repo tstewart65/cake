@@ -7,12 +7,12 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Cake.Core.Utilities
+namespace Cake.Utilities
 {
     /// <summary>
     /// Optimized hash generator. Using SHA1CryptoServiceProvider since it is FIPS compliant.
     /// </summary>
-    public static class FastHash
+    internal static class FastHash
     {
         /// <summary>
         /// Generates a hash of the passed byte arrays.
